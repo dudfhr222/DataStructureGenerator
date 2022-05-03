@@ -1,23 +1,19 @@
 package LinkedList;
-//E : (Generic) 클래스 E를 받을 수 있음
-//컬렉션 클래스와 같이 배열 기반으로 된 구조에는 E가 어울림
+
+import java.util.NoSuchElementException;
+
 public class SLinkedList<E> implements List<E> {
-	//클래스 및 생성자 구상
-	private Node<E> head; //노드의 첫 부분
-	private Node<E> tail; //노드의 마지막 부분
-	private int size; // 요소 개수
+
+	private Node<E> head; 
+	private Node<E> tail; 
+	private int size;
 	
 	public SLinkedList() {
 		this.head = null;
 		this.tail = null;
 		this.size = 0;
 	}
-	public static void main(String[] args) {
-		SLinkedList<Integer> list = new SLinkedList<>();
-		
-		
-	}
-	//search 메소드
+	
 	private Node<E> search(int index){
 		if(index < 0 || index >= size) {
 			throw new IndexOutOfBoundsException();
@@ -25,35 +21,32 @@ public class SLinkedList<E> implements List<E> {
 		Node<E> x = head;
 		
 		for (int i = 0; i < index; i++) {
-			x = x.next; //x노드의 다음 노드를 x에 저장
+			x = x.next; 
 		}
 		return x;
 	}
-	//add 메소드
+	
 	public void addFirst(E value) {
-		Node<E> newNode = new Node<E>(value); //새 노드 생성
-		newNode.next = head; //새 노드의 다음 노드로 head 노드를 연결
-		head = newNode; //head가 가리키는 노드를 새 노드로 변경
+		Node<E> newNode = new Node<E>(value);
+		newNode.next = head; 
+		head = newNode; 
 		size++;
 		
-		//다음에 가리킬 노드가 없는 경우 새 노드는 처음이자 마지막 노드
 		if(head.next == null) {
 			tail = head;
 		}
 	}
-	
-	//add() = addLast()
-	//새로운 노드 생성하고 이전 노드의 레퍼런스 변수가 새로운 노드를 가리키게 해줌
 	
 	@Override
 	public boolean add(E value) {
 		addLast(value);
 		return true;
 	}
+	
 	public void addLast(E value) {
-		Node<E> newNode = new Node<E>(value); //새 노드 생성
+		Node<E> newNode = new Node<E>(value); 
 		
-		if(size == 0 ) { //처음 넣는 노드일 경우 addFisrt로 추가
+		if(size == 0 ) { 
 			addFirst(value);
 			return;
 		}
@@ -65,39 +58,179 @@ public class SLinkedList<E> implements List<E> {
 	@Override
 	public void add(int index, E value) {
 		
-		//잘못된 인덱스를 참조할 경우 예외 발생
 		if(index > size || index < 0) {
 			throw new IndexOutOfBoundsException();
 		}
-		//추가하려는  index가 가장 앞에 추가될 경우 addFisrt 호출
 		if(index == 0) {
 			addFirst(value);
 			return;
 		}
-		//추가하려는 index가 맨 뒤인 경우 addLast 호출
 		if(index == size) {
 			addLast(value);
 			return;
 		}
 		
-		//추가하려는 위치의 이전 노드
 		Node<E> prev_Node = search(index-1);
-		
-		//추가하려는 위치의 노드
 		Node<E> next_Node = prev_Node.next;
-		
-		//추가하려는 노드
 		Node<E> newNode = new Node<E>(value);
 		
-		
-		/* 이전 노드가 가리키는 노드를 끊음
-		 * 새 노드로 변경
-		 * 새 노드가 가리키는 도느느 next_Node로 설정
-		 */
 		prev_Node.next = null;
 		prev_Node.next = newNode;
 		newNode.next = next_Node;
 		size++;
-		//https://st-lab.tistory.com/167
 	}
+	
+	//가장 앞에있는 요소 제거
+		public E remove() {
+			
+			Node<E> headNode = head;
+			if(headNode == null) {
+				throw new NoSuchElementException();
+			}
+			//삭제된 노드를 반환하기 위한 임시 변수
+			E element = headNode.data;
+			//head의 다음 노드
+			Node<E> nextNode = head.next;
+			
+			head.data = null;
+			head.next = null;
+			
+			//head가 다음 노드를 가리키도록 업데이트
+			head = nextNode;
+			size--;
+			
+			if(size==0) {
+				tail = null;
+			}
+			return element;
+		}
+	
+		@Override
+		public E remove(int index) {
+			
+			if(index == 0) {
+				return remove();
+			}
+			
+			if(index >= size || index < 0) {
+				throw new NoSuchElementException();
+			}
+			Node<E> prevNode = search(index-1);
+			Node<E> removedNode = prevNode.next;
+			Node<E> nextNode = removedNode.next;
+			
+			E element = removedNode.data; //삭제되는 노드의 데이터를 반환하기 위한 임시 변수
+			
+			//이전 노드가 가리키는 노드를 삭제하려는 노드의 다음노드로 변경
+			prevNode.next = nextNode;
+			
+			//만약 삭제했던 노드가 마지막 노드라면 tail을 prevNode로 갱신
+			if(prevNode.next == null) {
+				tail = prevNode;
+			}
+			//데이터 삭제
+			removedNode.next = null;
+			removedNode.data = null;
+			size--;
+			return element;
+		}
+		
+		@Override
+		public boolean remove(Object value) {
+			
+			Node<E> prevNode = head;
+			boolean hasValue = false;
+			Node<E> x = head; //removedNode
+
+			//value와 일치하는 노드를 찾음
+			for(;x!=null;x = x.next) {
+				if(value.equals(x.data)) {
+					hasValue = true;
+					break;
+				}
+				prevNode = x;
+			}
+			
+			if(x == null) {
+				return false;
+			}
+			
+			//삭제하려는 노드가 head라면 기존 remove()사용
+			if(x.equals(head)) {
+				remove();
+				return true;
+			}else {
+				//이전 노드의 링크를 삭제하려는 노드의 다음 노드로 연결
+				prevNode.next = x.next;
+				
+				if(prevNode.next == null) {
+					tail = prevNode;
+				}
+				x.data = null;
+				x.next = null;
+				size--;
+			}
+			return true;
+		}
+		@Override
+		public E get(int index) {
+			return search(index).data;
+		}
+		//set : 기존 index에 위치한 데이터를 새로운 데이터로 교체
+		public void set(int index, E value) {
+			Node<E> replaceNode = search(index); //찾는 인덱스의 노드
+			replaceNode.data = null;
+			replaceNode.data = value;
+		}
+		
+		//indexOf : 사용하고자 하는 요소의 인덱스를 반환
+		//없으면 -1 반환
+ 		@Override
+ 		public int indexOf(Object value) {
+ 			int index = 0;
+ 			for(Node<E> x = head; x!= null; x = x.next) {
+ 				if(value.equals(x.data)) {
+ 					return index;
+ 				}
+ 				index++;
+ 			}
+ 			return -1;
+ 		}
+		//contains : 찾고자하는 요소가 존재하는지 안하는지 반환
+ 		//있으면 true, 없으면 false
+ 		@Override
+ 		public boolean contains(Object item) {
+ 			return indexOf(item) >=0; //ㅁㅊ boolean을 이렇게 표현하네
+ 		}
+ 		
+ 		@Override
+ 		public int size() {
+ 			return size;
+ 		}
+		
+ 		//size == 0 => true / size != 0 => false
+ 		@Override
+ 		public boolean isEmpty() {
+ 			return size == 0;
+ 		}
+ 		
+ 		@Override
+ 		public void clear() {
+ 			for(Node<E> x = head; x != null;) {
+ 				Node<E> nextNode = x.next;
+ 				x.data = null;
+ 				x.next = null;
+ 				x = nextNode;
+ 			}
+ 			head = tail = null;
+ 			size = 0;
+ 		}
+ 		//여기까지가 기본적인 메소드
+ 		
+ 		/*CLONE*/
+ 		// '='로 객체를 복사하면 주소를 복사하는 것이므로, 복사한 객체에서 데이터 조작할 시 원본 객체까지 영향을 미침
+ 		//이러한 문제를 막기위해 필요한 것이 clone() -> 접근 제어자가 protected로 되어있음
+ 		
+ 		
+		//https://st-lab.tistory.com/167
 }
